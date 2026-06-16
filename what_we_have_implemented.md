@@ -48,4 +48,4 @@ Dockerfile + docker-compose ready
 
 
 
-models -> security layer(also handling compliance in production/ prevents leakage of api keys by the llm)
+models -> security layer(also handling compliance in production/ prevents leakage of api keys by the llm)->cache(use redis in prod)->monitoring(use prometheus in prod)

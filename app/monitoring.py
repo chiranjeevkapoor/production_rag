@@ -74,8 +74,8 @@ class MetricsCollector:
     def record_request(
         self,
         latency_ms: float,
-        input_tokens: int,
-        output_tokens: int,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
         error: bool = False,
         cache_hit: bool = False,
     ):
@@ -92,6 +92,12 @@ class MetricsCollector:
             self.metrics["cache_hits"] += 1
         else:
             self.metrics["cache_misses"] += 1
+    
+    # Add this inside the MetricsCollector class in app/monitoring.py
+    @property
+    def summary(self) -> dict:
+        """Property wrapper around get_summary for FastAPI schema serialization."""
+        return self.get_summary()
 
     def get_summary(self) -> dict:
         avg_latency = (
@@ -111,6 +117,8 @@ class MetricsCollector:
             else 0
         )
 
+        
+
         return {
             "total_requests": self.metrics["requests_total"],
             "total_errors": self.metrics["errors_total"],
@@ -129,7 +137,7 @@ class InstrumentedLLM:
     """LLM with full instrumentation."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY_K"), temperature=0)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
         self.metrics = MetricsCollector()
         self.logger = setup_logging()
 
@@ -205,6 +213,53 @@ def demo_monitoring():
     summary = llm.metrics.get_summary()
     for key, value in summary.items():
         print(f"  {key}: {value}")
+
+
+# class RequestTimer:
+#     """Context manager to measure the latency of an operation in milliseconds."""
+
+#     def __init__(self):
+#         self.start_time = None
+#         self.elapsed_ms = 0.0
+
+#     def __enter__(self):
+#         self.start_time = time.time()
+#         return self
+
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if self.start_time:
+#             self.elapsed_ms = (time.time() - self.start_time) * 1000
+
+
+class RequestTimer:
+    """Context manager to measure the latency of an operation in milliseconds."""
+
+    def __init__(self):
+        self.start_time = None
+        self._end_time = None
+
+    def __enter__(self):
+        # Tip: time.perf_counter() is preferred over time.time() for benchmarking
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.start_time:
+            self._end_time = time.perf_counter()
+
+    @property
+    def elapsed_ms(self) -> float:
+        """Dynamically calculates elapsed time whether called inside or after the block."""
+        if self.start_time is None:
+            return 0.0
+        
+        # If the block has already exited, use the frozen end time
+        if self._end_time is not None:
+            return (self._end_time - self.start_time) * 1000
+            
+        # If we are accessing this INSIDE the block, calculate current delta live
+        return (time.perf_counter() - self.start_time) * 1000
+
 
 
 if __name__ == "__main__":

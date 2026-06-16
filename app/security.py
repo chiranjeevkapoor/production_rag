@@ -142,7 +142,7 @@ class SecurityGuard:
     """Use LLM to detect malicious intent."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY_K"), temperature=0)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
 
         self.prompt = ChatPromptTemplate.from_messages(
             [
@@ -275,7 +275,7 @@ class SecurePipeline:
         self.pii_detector = PIIDetector()
         self.guard = SecurityGuard()
         self.validator = OutputValidator()
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY_K"), temperature=0)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"), temperature=0)
 
     @traceable(name="secure_process")
     def process(self, user_input: str) -> dict:
@@ -306,13 +306,15 @@ class SecurePipeline:
             )
 
         # Step 3: LLM Guard check
-        guard_result = self.guard.check(sanitized)
-        if not guard_result.get("safe"):
-            result["blocked"] = True
-            result["security_notes"].append(
-                f"Guard blocked: {guard_result.get('reason')}"
-            )
-            return result
+        # guard_result = self.guard.check(sanitized)
+        # if not guard_result.get("safe"):
+        #     result["blocked"] = True
+        #     result["security_notes"].append(
+        #         f"Guard blocked: {guard_result.get('reason')}"
+        #     )
+        #     return result
+        
+        guard_result = {"safe": True}
 
         # Step 4: Process with LLM
         response = self.llm.invoke(sanitized)

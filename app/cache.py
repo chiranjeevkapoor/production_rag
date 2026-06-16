@@ -12,7 +12,7 @@ In production, replace this with Redis for:
 - Built-in TTL management"""
 
 
-    def _init_(self, ttl_seconds: int = 300):
+    def __init__(self, ttl_seconds: int = 300):
         self.ttl = ttl_seconds
         self._cache: dict[str, dict] = {}
         self._hits = 0
@@ -31,7 +31,7 @@ In production, replace this with Redis for:
         if key in self._cache:
             entry = self._cache[key]
             # Check TTL
-            if time.time() - entry['imestamp'] < self.ttl:
+            if time.time() - entry['timestamp'] < self.ttl:
                 self._hits += 1
                 return entry["response"]
             else:

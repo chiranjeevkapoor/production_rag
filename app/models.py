@@ -28,6 +28,7 @@ class ChatResponse(BaseModel):
     model_used:str
     cached:bool=False
     processing_time_ms:float
+    security_notes: list[str] = Field(default_factory=list, description="Security log findings caught during processing")
     timestamp:str = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class HealthResponse(BaseModel):
@@ -41,8 +42,8 @@ class HealthResponse(BaseModel):
 class MetricsResponse(BaseModel):
     """Metrics endpoint response."""
     total_requests:int
-    total_erros:int
-    error_rate:int
+    total_errors:int
+    error_rate:str
     avg_latency_ms:float
     cache_hit_rate:str
     total_input_tokens:int
