@@ -29,6 +29,7 @@ class InputSanitizer:
         r"pretend\s+you\s+are",
         r"act\s+as\s+(if\s+)?you",
         r"bypass\s+(all\s+)?restrictions",
+        r"\bDAN\b",
     ]
 
     def __init__(self):
@@ -51,6 +52,9 @@ class InputSanitizer:
         text = text.replace("{{", "{ {").replace("}}", "} }")
 
         return text.strip()
+    def is_safe_test(self, text: str) -> tuple[bool, str | None]:
+        is_suspicious, reason = self.is_suspicious(text)  
+        return not is_suspicious, reason
     
 def demo_input_sanitization():
     """Demonstrate input sanitization."""
